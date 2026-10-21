@@ -3,6 +3,8 @@
 import importlib.util
 import io
 import pathlib
+import shutil
+import subprocess
 import sys
 import tarfile
 import tempfile
@@ -57,9 +59,83 @@ class ReleasePreparationTests(unittest.TestCase):
         original = self.source.read_bytes()
         with patch.object(release, "audit", return_value=["pubspec.yaml"]), patch.object(release, "validate_documentation"):
             stage, package = release.prepare(self.root)
+        self.addCleanup(shutil.rmtree, stage)
         self.assertEqual(self.source.read_bytes(), original)
         self.assertNotIn("publish_to", (package / "pubspec.yaml").read_text())
-        self.assertTrue(stage.is_relative_to(self.root / "build"))
+        self.assertFalse(stage.is_relative_to(self.root))
+
+    def test_staging_escapes_ignored_repository_ancestors(self):
+        (self.root / ".git").mkdir()
+        (self.root / ".pubignore").write_text("build/\n", encoding="utf-8")
+        with patch.object(release, "audit", return_value=["pubspec.yaml"]), patch.object(release, "validate_documentation"):
+            stage, package = release.prepare(self.root)
+        self.addCleanup(shutil.rmtree, stage)
+        self.assertFalse(package.is_relative_to(self.root))
+        self.assertFalse(any((parent / ".git").exists() for parent in package.parents))
+        self.assertTrue((package / "pubspec.yaml").is_file())
+
+    def test_temporary_directory_inside_repository_is_rejected(self):
+        temporary_root = self.root / "build"
+        temporary_root.mkdir()
+        with patch.object(release, "audit", return_value=["pubspec.yaml"]), patch.object(release, "validate_documentation"), patch.object(release.tempfile, "gettempdir", return_value=str(temporary_root)):
+            with self.assertRaisesRegex(ValueError, "outside Git repositories"):
+                release.prepare(self.root)
+        self.assertEqual(list(temporary_root.iterdir()), [])
+
+    def test_temporary_directory_in_another_git_worktree_is_rejected(self):
+        (self.root / ".git").write_text("gitdir: elsewhere", encoding="utf-8")
+        temporary_root = self.root / "temporary"
+        temporary_root.mkdir()
+        source_root = self.root / "source"
+        source_root.mkdir()
+        shutil.copyfile(self.source, source_root / "pubspec.yaml")
+        with patch.object(release, "audit", return_value=["pubspec.yaml"]), patch.object(release, "validate_documentation"), patch.object(release.tempfile, "gettempdir", return_value=str(temporary_root)):
+            with self.assertRaisesRegex(ValueError, "outside Git repositories"):
+                release.prepare(source_root)
+
+    def test_failed_execution_keeps_logs_and_guard_but_removes_workspace(self):
+        original = self.source.read_bytes()
+        workspace = []
+
+        def fail(command, **kwargs):
+            workspace.append(pathlib.Path(kwargs["cwd"]).parent)
+            kwargs["stdout"].write("injected dependency resolution failure\n")
+            raise subprocess.CalledProcessError(1, command)
+
+        with patch.object(release, "audit", return_value=["pubspec.yaml"]), patch.object(release, "validate_documentation"), patch.object(release.shutil, "which", return_value="dart"), patch.object(release.subprocess, "run", side_effect=fail):
+            with self.assertRaises(subprocess.CalledProcessError):
+                release.run(self.root)
+        self.assertFalse(workspace[0].exists())
+        evidence = list((self.root / "build").glob("release-stage-*"))
+        self.assertEqual(len(evidence), 1)
+        self.assertIn("injected", (evidence[0] / "resolution.log").read_text())
+        self.assertTrue((evidence[0] / "source-manifest.json").is_file())
+        self.assertFalse((evidence[0] / "package").exists())
+        self.assertEqual(self.source.read_bytes(), original)
+
+    def test_success_keeps_archive_and_consumer_evidence_outside_package(self):
+        original = self.source.read_bytes()
+        commands = []
+
+        def execute(command, **kwargs):
+            commands.append(command)
+            kwargs["stdout"].write("simulated command completion\n")
+            for argument in command:
+                if argument.startswith("--to-archive="):
+                    pathlib.Path(argument.split("=", 1)[1]).write_bytes(b"unit-test archive placeholder")
+
+        with patch.object(release, "audit", return_value=["pubspec.yaml"]), patch.object(release, "validate_documentation"), patch.object(release.shutil, "which", return_value="dart"), patch.object(release.subprocess, "run", side_effect=execute), patch.object(release, "inspect_archive", return_value="unit-test inspection"):
+            release.run(self.root)
+        evidence = next((self.root / "build").glob("release-stage-*"))
+        self.assertEqual({item.name for item in evidence.iterdir()}, {
+            "resolution.log", "dry-run.log", "archive.log", "consumer.log",
+            "source-manifest.json", "operation_recovery.tar.gz", "archive-inspection.txt",
+        })
+        self.assertEqual(len(commands), 4)
+        self.assertEqual(commands[1][1:], ["pub", "publish", "--dry-run"])
+        self.assertTrue(commands[3][1].endswith("verify_consumer.py"))
+        self.assertFalse(pathlib.Path(commands[3][2]).parent.exists())
+        self.assertEqual(self.source.read_bytes(), original)
 
     def test_missing_private_guard_fails_before_copying(self):
         self.source.write_text("version: 0.1.0\n", encoding="utf-8")

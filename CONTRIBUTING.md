@@ -62,7 +62,11 @@ lockfile separately; it must actually pass on 3.10.0 before release. Do not hand
 edit lockfiles or interpret source language constraints alone as compatibility.
 
 `python tool/prepare_release.py` audits the Git candidate list and validates a
-disposable copy under ignored `build/`. Only that copy drops `publish_to: none`.
+disposable copy in the system temporary directory, outside Git repositories.
+Only that copy drops `publish_to: none`. Set TMP/TEMP outside any Git worktree.
+Logs, the inspected archive, and consumer evidence are retained under ignored
+`build/release-stage-*/` on success or failure; the temporary workspace is removed.
+`--prepare-only` retains its temporary workspace for inspection instead.
 The command performs dry-run/archive inspection/consumer checks and never uploads.
 Use `--prepare-only` to inspect the copy before invoking external Dart commands.
 Both the normal working tree and the SQLite example remain private packages.

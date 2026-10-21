@@ -82,19 +82,22 @@ jobs:
             example/sqlite_recovery/pubspec.lock
   reliability-gate:
     if: always()
-    needs: clean-checkout
+    needs: [clean-checkout, publication-packaging]
     runs-on: ubuntu-latest
     steps:
       - env:
           RESULT: ${{ needs.clean-checkout.result }}
-        run: test "$RESULT" = success
+          PACKAGING: ${{ needs.publication-packaging.result }}
+        run: test "$RESULT" = success && test "$PACKAGING" = success
   release-quality:
     if: github.event_name == 'workflow_dispatch' && inputs.release_candidate
     uses: ./.github/workflows/quality.yml
-  release-check:
-    if: github.event_name == 'workflow_dispatch' && inputs.release_candidate
-    needs: [clean-checkout, release-quality]
-    runs-on: ubuntu-latest
+  publication-packaging:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
@@ -110,7 +113,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: inspected-release-candidate
+          name: inspected-release-candidate-${{ matrix.os }}
           path: |
             build/release-stage-*/operation_recovery.tar.gz
             build/release-stage-*/archive-inspection.txt
