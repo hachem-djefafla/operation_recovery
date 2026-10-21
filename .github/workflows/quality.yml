@@ -1,0 +1,62 @@
+name: Fast quality
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  merge_group:
+  workflow_dispatch:
+  workflow_call:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: quality-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: dart pub get
+      - run: dart pub get
+        working-directory: example/sqlite_recovery
+      - run: dart format --output=none --set-exit-if-changed .
+      - run: dart analyze --fatal-infos
+      - run: python -m unittest discover -s tool/tests -v
+      - run: python tool/audit_repository.py
+      - run: python tool/check_documentation.py
+      - run: dart test --coverage=coverage --coverage-package='^operation_recovery$'
+      - run: dart run coverage:format_coverage --lcov --in=coverage --out=coverage/lcov.info --report-on=lib
+      - run: python tool/check_coverage.py coverage/lcov.info
+      - run: dart run example/main.dart
+      - run: dart run example/public_api_smoke.dart
+      - run: python tool/extract_readme_examples.py
+      - run: dart format build/readme-check
+      - run: dart run build/readme-check/fragments.dart
+      - run: dart run build/readme-check/main.dart
+      - run: dart doc --output=doc/api .
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: core-coverage-and-api
+          path: |
+            coverage/
+            doc/api/
+  quality-gate:
+    if: always()
+    needs: quality
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          RESULT: ${{ needs.quality.result }}
+        run: test "$RESULT" = success

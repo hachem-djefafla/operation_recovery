@@ -1,0 +1,114 @@
+name: Full reliability
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  merge_group:
+  workflow_dispatch:
+    inputs:
+      release_candidate:
+        description: Run final publication and archive checks (never uploads)
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: reliability-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  clean-checkout:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        sdk: ['3.10.0', stable]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 35
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: ${{ matrix.sdk }}
+      # No Pub/native cache restore: resolve and build on a fresh hosted runner.
+      - run: dart --version
+      - name: Record SDK and dependency resolution
+        run: dart pub get
+      - name: Resolve native example from committed lock (stable)
+        if: matrix.sdk == 'stable'
+        run: dart pub get --enforce-lockfile
+        working-directory: example/sqlite_recovery
+      - name: Resolve compatible native development tooling (minimum SDK)
+        if: matrix.sdk != 'stable'
+        run: dart pub get
+        working-directory: example/sqlite_recovery
+      - run: dart format --output=none --set-exit-if-changed .
+      - run: dart analyze --fatal-infos
+      - run: dart test
+      - run: dart run example/main.dart
+      - run: dart run example/public_api_smoke.dart
+      - run: dart run tool/verify_native.dart
+        working-directory: example/sqlite_recovery
+      - run: dart build cli --target=bin/crash_worker.dart --output=build/crash_worker
+        working-directory: example/sqlite_recovery
+      - run: dart analyze --fatal-infos
+        working-directory: example/sqlite_recovery
+      - run: dart test test/storage --reporter=expanded
+        working-directory: example/sqlite_recovery
+      - run: dart test test/codec --reporter=expanded
+        working-directory: example/sqlite_recovery
+      - run: dart test test/process --concurrency=1 --reporter=expanded
+        working-directory: example/sqlite_recovery
+      - run: dart run bin/crash_demo.dart --scenario=lost-response
+        working-directory: example/sqlite_recovery
+      - run: dart run bin/crash_demo.dart --scenario=authentication
+        working-directory: example/sqlite_recovery
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: native-evidence-${{ matrix.os }}-${{ matrix.sdk }}
+          path: |
+            example/sqlite_recovery/build/native-evidence.json
+            example/sqlite_recovery/pubspec.lock
+  reliability-gate:
+    if: always()
+    needs: clean-checkout
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          RESULT: ${{ needs.clean-checkout.result }}
+        run: test "$RESULT" = success
+  release-quality:
+    if: github.event_name == 'workflow_dispatch' && inputs.release_candidate
+    uses: ./.github/workflows/quality.yml
+  release-check:
+    if: github.event_name == 'workflow_dispatch' && inputs.release_candidate
+    needs: [clean-checkout, release-quality]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: dart pub get
+      # Only the disposable copy has its private-package guard removed.
+      - run: python tool/prepare_release.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: inspected-release-candidate
+          path: |
+            build/release-stage-*/operation_recovery.tar.gz
+            build/release-stage-*/archive-inspection.txt
+            build/release-stage-*/*.log
+            build/release-stage-*/source-manifest.json

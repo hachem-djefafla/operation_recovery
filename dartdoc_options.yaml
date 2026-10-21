@@ -1,0 +1,7 @@
+dartdoc:
+  categories:
+    Recovery:
+      markdown: docs/api_overview.md
+  categoryOrder:
+    - Recovery
+  showUndocumentedCategories: false
