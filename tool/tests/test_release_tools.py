@@ -30,21 +30,22 @@ documentation = load("check_documentation")
 
 class DocumentationTests(unittest.TestCase):
     def test_public_relative_external_and_fragment_links(self):
-        docs = {"README.md": "[storage](docs/storage_contract.md#reads) [web](https://example.com) [here](#local)"}
-        self.assertEqual(documentation.validate_links(docs, {"README.md", "docs/storage_contract.md"}), 1)
+        docs = {"README.md": "[storage](doc/storage_contract.md#reads) [web](https://example.com) [here](#local)"}
+        self.assertEqual(documentation.validate_links(docs, {"README.md", "doc/storage_contract.md"}), 1)
 
     def test_local_ignored_file_cannot_satisfy_public_link(self):
-        docs = {"README.md": "[internal](docs/final_release_readiness_report.md)"}
-        with self.assertRaises(ValueError):
-            documentation.validate_links(docs, {"README.md"})
+        for directory in ["doc", "docs"]:
+            docs = {"README.md": f"[internal]({directory}/final_release_readiness_report.md)"}
+            with self.subTest(directory=directory), self.assertRaises(ValueError):
+                documentation.validate_links(docs, {"README.md"})
 
     def test_repository_escape_rejected(self):
         with self.assertRaises(ValueError):
             documentation.validate_links({"README.md": "[outside](../other/README.md)"}, {"README.md"})
 
     def test_adr_and_parent_directory_links_remain_public(self):
-        docs = {"docs/adr/README.md": "[contract](../storage_contract.md) [examples](../../example/)"}
-        self.assertEqual(documentation.validate_links(docs, {"docs/storage_contract.md", "example/main.dart"}), 2)
+        docs = {"doc/adr/README.md": "[contract](../storage_contract.md) [examples](../../example/)"}
+        self.assertEqual(documentation.validate_links(docs, {"doc/storage_contract.md", "example/main.dart"}), 2)
 
 
 class ReleasePreparationTests(unittest.TestCase):
@@ -153,13 +154,19 @@ class ReleasePreparationTests(unittest.TestCase):
         for name in ["neighbor/pubspec.yaml", "example/build/worker", "example/recovery.db",
                      "docs/.env", "example/credentials.json", "docs/milestones_1_2_report.md",
                      "docs/final_release_readiness_report.md", "docs/release_checklist.md",
-                     "docs/release_readiness_checklist.md"]:
+                     "docs/release_readiness_checklist.md", "doc/milestone_5_report.md",
+                     "doc/final_release_readiness_report.md", "doc/release_checklist.md",
+                     "docs/architecture.md", "doc/api/index.html"]:
             with self.subTest(name=name), self.assertRaises(ValueError):
                 repository.inspect_file(name, b"not for publication")
 
     def test_git_audit_allows_workflows_and_real_example_lock(self):
         repository.inspect_file(".github/workflows/quality.yml", b"permissions: read")
         repository.inspect_file("example/sqlite_recovery/pubspec.lock", b"packages: {}")
+
+    def test_git_audit_allows_public_doc_layout(self):
+        repository.inspect_file("doc/architecture.md", b"Public architecture")
+        repository.inspect_file("doc/adr/README.md", b"Public decisions")
 
 
 class CoverageTests(unittest.TestCase):
@@ -228,7 +235,8 @@ class ArchiveTests(unittest.TestCase):
                 output.addfile(info, io.BytesIO(content))
 
     def test_valid_archive(self):
-        self.make_archive()
+        self.make_archive([("doc/architecture.md", b"Public architecture", tarfile.REGTYPE),
+                           ("doc/adr/README.md", b"Public decisions", tarfile.REGTYPE)])
         self.assertIn("SHA-256", archive.inspect_archive(self.path))
 
     def test_missing_public_entrypoint(self):
@@ -240,11 +248,19 @@ class ArchiveTests(unittest.TestCase):
         for name in [".dart_tool/cache", "example/build/worker", "demo.db-wal",
                      "lib/native.dll", ".env", "credentials.json", "doc/api/index.html",
                      "docs/milestone_5_report.md", "docs/final_release_readiness_report.md",
-                     "docs/release_checklist.md", "docs/release_readiness_checklist.md"]:
+                     "docs/release_checklist.md", "docs/release_readiness_checklist.md",
+                     "doc/milestone_5_report.md", "doc/final_release_readiness_report.md",
+                     "doc/release_checklist.md", "doc/release_readiness_checklist.md",
+                     "docs/architecture.md"]:
             with self.subTest(name=name):
                 self.make_archive([(name, b"artifact", tarfile.REGTYPE)])
                 with self.assertRaises(ValueError):
                     archive.inspect_archive(self.path)
+
+    def test_even_an_empty_legacy_docs_directory_is_rejected(self):
+        self.make_archive([("docs/", b"", tarfile.DIRTYPE)])
+        with self.assertRaisesRegex(ValueError, "Legacy docs/"):
+            archive.inspect_archive(self.path)
 
     def test_traversal_links_and_duplicates_rejected(self):
         for name, kind in [("../escape", tarfile.REGTYPE), ("/absolute", tarfile.REGTYPE),

@@ -133,7 +133,7 @@ Inspect `store.configuration` immediately after opening for the effective SQLite
 version, WAL mode, synchronous setting, and busy timeout. It contains no paths or
 operation data. Requests and credentials remain application-owned.
 
-See the [persistence contract](../../docs/sqlite_persistence_contract.md) for the
+See the [persistence contract](../../doc/sqlite_persistence_contract.md) for the
 schema, codec, atomicity, error classification, and guidance for custom adapters.
 
 ## Boundaries

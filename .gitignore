@@ -43,5 +43,6 @@ token.json
 Thumbs.db
 
 # Internal engineering reports
-docs/*report*.md
-docs/*release*checklist*.md
+/docs/
+doc/*report*.md
+doc/*release*checklist*.md

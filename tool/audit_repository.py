@@ -11,7 +11,7 @@ ROOT_FILES = {
     "CONTRIBUTING.md", "LICENSE", "pubspec.yaml", "analysis_options.yaml",
     "dartdoc_options.yaml",
 }
-ROOT_DIRECTORIES = {".github", "docs", "example", "lib", "test", "tool"}
+ROOT_DIRECTORIES = {".github", "doc", "example", "lib", "test", "tool"}
 
 
 def git(root, *arguments):
@@ -38,6 +38,8 @@ def inspect_file(name, content):
         raise ValueError("Unsafe Git path")
     if path.parts[0] not in ROOT_DIRECTORIES and name not in ROOT_FILES:
         raise ValueError(f"Unexpected package-root entry: {name}")
+    if name.lower().startswith("doc/api/"):
+        raise ValueError(f"Generated API documentation in Git candidates: {name}")
     if any(part in BLOCKED_PARTS - {".github"} for part in path.parts):
         raise ValueError(f"Generated/local file in Git candidates: {name}")
     if (name.lower().endswith(BLOCKED_SUFFIXES) or

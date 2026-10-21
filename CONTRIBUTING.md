@@ -88,8 +88,8 @@ Backend assumptions and safety changes require tests and an ADR. Do not log raw
 requests, credentials, or backend bodies in failures or CI artifacts.
 
 Public integration assumptions are documented in the
-[backend contract](docs/backend_contract.md) and
-[persistence contract](docs/sqlite_persistence_contract.md).
+[backend contract](doc/backend_contract.md) and
+[persistence contract](doc/sqlite_persistence_contract.md).
 Internal engineering reports and release checklists remain local and are excluded
 from Git and package archives. Documentation checks validate against Git's file
 list, so a local ignored document cannot conceal a broken public link.

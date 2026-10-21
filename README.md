@@ -36,7 +36,7 @@ dependencies:
     path: ../operation_recovery
 ```
 
-The [API integration guide](docs/api_overview.md) covers handlers, startup recovery,
+The [API integration guide](doc/api_overview.md) covers handlers, startup recovery,
 authentication, account switching, and shutdown. Run
 `dart run example/public_api_smoke.dart` for a minimal public-import workflow, or
 `dart run example/main.dart` for a real HTTP response-loss example.
@@ -171,7 +171,7 @@ create a new scoped facade for the next account and close stores separately.
 One coordinator serializes matching IDs; independent IDs can progress concurrently.
 Multiple coordinators/processes have no shared handler-ownership guarantee.
 Shutdown waits for dispatched handlers to settle and does not own stores/clients.
-See the [recovery contract](docs/recovery_contract.md) for precise semantics and the
+See the [recovery contract](doc/recovery_contract.md) for precise semantics and the
 [runnable example](example/main.dart) for integration.
 
 ## Public storage API
@@ -200,15 +200,15 @@ without retrying or refreshing the version. See the storage contract for details
 
 ## Contracts and verification
 
-- [Architecture and verification boundaries](docs/architecture.md)
-- [State machine, identity, and validation](docs/domain_contract.md)
-- [Storage, concurrency, and scope guarantees](docs/storage_contract.md)
-- [Submission, reconciliation, events, and shutdown](docs/recovery_contract.md)
-- [SQLite persistence and serialization](docs/sqlite_persistence_contract.md)
-- [Backend integration contract](docs/backend_contract.md)
-- [Failure model and acceptance matrix](docs/failure_model.md)
-- [Architecture decisions](docs/adr/README.md)
-- [Case study: a successful write with a lost response](docs/recovery_case_study.md)
+- [Architecture and verification boundaries](doc/architecture.md)
+- [State machine, identity, and validation](doc/domain_contract.md)
+- [Storage, concurrency, and scope guarantees](doc/storage_contract.md)
+- [Submission, reconciliation, events, and shutdown](doc/recovery_contract.md)
+- [SQLite persistence and serialization](doc/sqlite_persistence_contract.md)
+- [Backend integration contract](doc/backend_contract.md)
+- [Failure model and acceptance matrix](doc/failure_model.md)
+- [Architecture decisions](doc/adr/README.md)
+- [Case study: a successful write with a lost response](doc/recovery_case_study.md)
 - [Contribution and CI instructions](CONTRIBUTING.md)
 
 From this directory:

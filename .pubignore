@@ -48,5 +48,6 @@ doc/api/
 **/Thumbs.db
 
 # Internal engineering documents stay local.
-docs/*report*.md
-docs/*release*checklist*.md
+/docs/
+doc/*report*.md
+doc/*release*checklist*.md

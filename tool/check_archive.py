@@ -28,7 +28,7 @@ SECRET_PATTERNS = [
 
 def is_internal_document(name):
     path = pathlib.PurePosixPath(name.lower())
-    return (path.parent == pathlib.PurePosixPath("docs") and path.suffix == ".md"
+    return (path.parent in {pathlib.PurePosixPath("doc"), pathlib.PurePosixPath("docs")} and path.suffix == ".md"
             and ("report" in path.name or ("release" in path.name and "checklist" in path.name)))
 
 
@@ -45,6 +45,8 @@ def inspect_archive(path):
             lower = name.lower()
             if is_internal_document(name):
                 raise ValueError(f"Internal engineering document in archive: {name}")
+            if parts[0].lower() == "docs":
+                raise ValueError("Legacy docs/ directory in archive; use doc/ for public documentation")
             if any(part.lower() in BLOCKED_PARTS for part in parts):
                 raise ValueError(f"Development artifact in archive: {name}")
             if member.isdir():
