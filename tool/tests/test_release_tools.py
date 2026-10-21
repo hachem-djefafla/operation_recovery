@@ -246,6 +246,7 @@ class ArchiveTests(unittest.TestCase):
 
     def test_artifacts_rejected(self):
         for name in [".dart_tool/cache", "example/build/worker", "demo.db-wal",
+                     "example/sqlite_recovery/pubspec.lock",
                      "lib/native.dll", ".env", "credentials.json", "doc/api/index.html",
                      "docs/milestone_5_report.md", "docs/final_release_readiness_report.md",
                      "docs/release_checklist.md", "docs/release_readiness_checklist.md",

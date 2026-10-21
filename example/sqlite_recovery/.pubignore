@@ -1,0 +1,1 @@
+# Inherit root publication exclusions without the Git-only !pubspec.lock rule.
