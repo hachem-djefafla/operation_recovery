@@ -48,11 +48,15 @@ jobs:
         if: matrix.sdk != 'stable'
         run: dart pub get
         working-directory: example/sqlite_recovery
-      - run: dart format --output=none --set-exit-if-changed .
+      - name: Check canonical formatting (stable Dart)
+        if: matrix.sdk == 'stable'
+        run: dart format --output=none --set-exit-if-changed .
       - run: dart analyze --fatal-infos
       - run: dart test
       - run: dart run example/main.dart
       - run: dart run example/public_api_smoke.dart
+      - run: dart test test/tool --reporter=expanded
+        working-directory: example/sqlite_recovery
       - run: dart run tool/verify_native.dart
         working-directory: example/sqlite_recovery
       - run: dart build cli --target=bin/crash_worker.dart --output=build/crash_worker

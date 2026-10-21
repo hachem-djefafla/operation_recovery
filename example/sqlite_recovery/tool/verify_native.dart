@@ -5,6 +5,8 @@ import 'package:sqlite3/sqlite3.dart';
 
 import 'package:operation_recovery_sqlite_example/sqlite_operation_store.dart';
 
+import 'support/package_manifest.dart';
+
 /// Records actual Dart FFI loading and package resolution, independent of the CLI.
 void main() {
   final configFile = File('.dart_tool/package_config.json').absolute;
@@ -14,9 +16,9 @@ void main() {
   final dependency = packages.cast<Map<String, dynamic>>().singleWhere(
     (package) => package['name'] == 'sqlite3',
   );
-  final root = configFile.uri.resolve(dependency['rootUri']! as String);
-  final manifest = File.fromUri(
-    root.resolve('pubspec.yaml'),
+  final manifest = resolvePackageManifest(
+    configFile.uri,
+    dependency['rootUri']! as String,
   ).readAsStringSync();
   if (!RegExp(r'^version:\s*3\.7\.1\s*$', multiLine: true).hasMatch(manifest)) {
     throw StateError('The resolved sqlite3 package is not the approved 3.7.1');
