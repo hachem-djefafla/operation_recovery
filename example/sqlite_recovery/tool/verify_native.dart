@@ -62,9 +62,6 @@ void main() {
   } finally {
     // This exact directory was exclusively created above and is never supplied
     // by input. Do not generalize this cleanup to arbitrary database paths.
-    if (directory.resolveSymbolicLinksSync() != directory.absolute.path) {
-      throw StateError('Probe directory unexpectedly changed');
-    }
     directory.deleteSync(recursive: true);
   }
 }
