@@ -15,6 +15,7 @@ doc/api/
 **/coverage/
 **/__pycache__/
 **/pubspec.lock
+/example/sqlite_recovery/pubspec.lock
 **/*.db
 **/*.db-*
 **/*.sqlite
