@@ -6,7 +6,8 @@ the authoritative backend instead of automatically sending the write again.
 
 ## Release and verification
 
-[operation_recovery is published on pub.dev](https://pub.dev/packages/operation_recovery).
+Version **0.1.1** is [published on pub.dev](https://pub.dev/packages/operation_recovery/versions/0.1.1).
+This documentation-only patch preserves the public API and runtime behavior.
 The first release, **0.1.0**, provides immutable domain records, atomic scoped
 storage, typed handlers, explicit submission, lookup-only reconciliation, and a
 separate SQLite reference adapter.
@@ -41,7 +42,7 @@ Or add a compatible dependency to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  operation_recovery: ^0.1.0
+  operation_recovery: ^0.1.1
 ```
 
 The package requires Dart `>=3.10.0 <4.0.0`. Windows and Linux are verified CI

@@ -1,6 +1,7 @@
 # ADR-008: Separate SQLite reference, explicit format, and commit acknowledgements
 
-Status: Accepted design; implementation present; SQLite runtime verification pending.
+Status: Accepted and implemented; SQLite runtime acceptance completed.
+See the [acceptance evidence](../failure_model.md) for verification scope and limits.
 
 Keep the main package unchanged and dependency-free. Implement the existing store
 port in a separately configured example with pinned sqlite3/native assets. Use a

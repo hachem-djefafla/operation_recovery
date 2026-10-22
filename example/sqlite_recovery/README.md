@@ -5,11 +5,11 @@ The main `operation_recovery` package keeps zero runtime dependencies. This exam
 uses `sqlite3` 3.7.1 and its bundled native library; a separate Windows SQLite
 installer is unnecessary. Dart 3.10 or newer is required.
 
-**Verification status:** the developer independently passed 90 storage, 58 codec,
-and 32 real process tests on Windows. The lost-response demonstration confirmed
+**Verification status:** the initial independent Windows acceptance run passed
+90 storage, 58 codec, and 32 real process tests. The lost-response demonstration confirmed
 one HTTP submission, one backend effect, and one lookup using SQLite 3.54.0,
-WAL and synchronous=FULL. Linux, minimum Dart 3.10 and hosted CI remain release
-gates. See the [contribution guide](../../CONTRIBUTING.md) for current verification
+WAL and synchronous=FULL. The maintainer subsequently confirmed Windows/Linux
+release CI on Dart 3.10.0 and stable. See the [contribution guide](../../CONTRIBUTING.md) for current verification
 commands and CI requirements.
 
 ## Run on Windows

@@ -58,8 +58,8 @@ never retry the business write because its result could not be saved.
 Domain tests alone cannot establish P01-P06, C01-C04, or actual durability.
 Milestone 3 establishes storage-facing fault/concurrency behavior. Milestone 4
 adds submission counts, handler concurrency, observable events, shutdown, and
-actual HTTP lost-response/authentication evidence. Durable crash recovery remains
-Milestone 5 work; none of these memory tests establishes it.
+actual HTTP lost-response/authentication evidence. Milestone 5 supplies SQLite
+and real process-crash recovery evidence; memory tests alone do not establish it.
 
 ## Additional Milestone 3 acceptance evidence
 
@@ -83,8 +83,9 @@ tests. The developer independently passed 90 storage, 58 codec and 32 process
 tests on unrestricted Windows, including the one-request/one-effect/one-lookup
 demo. Agent-host native storage checks are recorded separately; fresh process
 launches remain restricted there. See the
-[contribution guide](../CONTRIBUTING.md). Linux/minimum-SDK
-and hosted CI are still gates. Codec tests alone are not durability evidence.
+[contribution guide](../CONTRIBUTING.md). The maintainer subsequently confirmed
+Windows/Linux release CI on Dart 3.10.0 and stable. Each new revision requires its
+own passing checks. Codec tests alone are not durability evidence.
 
 The [commit-failure tests](../test/recovery/commit_failures_test.dart) and
 [event/shutdown tests](../test/recovery/events_shutdown_test.dart) exercise commit

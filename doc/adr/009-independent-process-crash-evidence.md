@@ -1,6 +1,7 @@
 # ADR-009: Independent backend and forced client-process crash evidence
 
-Status: Accepted design; harness implemented; actual execution pending.
+Status: Accepted and implemented; real process-crash acceptance completed.
+See the [acceptance evidence](../failure_model.md) for verification scope and limits.
 
 The orchestrator directly launches a bundled Dart worker executable in independent
 backend/client roles. The backend survives client death and separately counts

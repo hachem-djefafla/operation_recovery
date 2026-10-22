@@ -17,8 +17,9 @@ are observations about communication, not authoritative business outcomes.
 - Adapters: memory reference adapter implemented for one in-memory context only.
   Simulated HTTP backends/handlers live outside core. The separate SQLite example
   and real process-crash harness are implemented for Milestone 5. The developer
-  verified native storage and 32 process tests on Windows; Linux/minimum-SDK
-  execution and hosted release checks remain pending.
+  initially verified native storage and 32 process tests on Windows. The
+  maintainer subsequently confirmed Windows/Linux release CI on Dart 3.10.0 and
+  stable; see the [contribution guide](../CONTRIBUTING.md).
 
 Only deliberate exports from `lib/operation_recovery.dart` are supported public
 API. The state machine remains internal until an actual public use case requires
@@ -67,10 +68,10 @@ progress independently. Version checks protect stored snapshots, not server
 side effects or multiple process ownership. Do not hold database transactions
 open across network calls. HTTP handlers must disable write retry middleware.
 
-## Milestone gates
+## Verification coverage
 
 1. Contracts, ADRs, scaffolding, acceptance matrix.
-2. Domain model and exhaustive deterministic transition tests. Stop and report.
+2. Domain model and exhaustive deterministic transition tests.
 3. Storage port, memory adapter, concurrency and storage fault tests.
 4. Submission/reconciliation and lost-response/authentication/stale-response tests.
 5. SQLite integration and actual process-termination recovery tests.
@@ -79,4 +80,5 @@ open across network calls. HTTP handlers must disable write retry middleware.
 Milestone 4 establishes storage-contract, local coordination, submission-gating,
 and lookup-only recovery behavior, including real HTTP lost-response tests.
 It does not establish storage durability or ownership across coordinators/processes.
-See the acceptance matrix for the remaining durability and release gates.
+Milestone 5 adds SQLite persistence and real process-crash evidence. See the
+[acceptance matrix](failure_model.md) for verification coverage and release limits.

@@ -3,7 +3,8 @@
 Implementation lives in the separate [SQLite example](../example/sqlite_recovery/README.md).
 The main library does not import SQLite, HTTP, filesystem, or platform APIs.
 The developer verified native storage and real process recovery on Windows.
-Linux, minimum SDK and hosted CI remain gates; see the
+The maintainer also confirmed Windows/Linux release CI on Dart 3.10.0 and stable;
+see the
 [contribution guide](../CONTRIBUTING.md) for reproducible verification.
 
 ## Initialization, opening, and versions
