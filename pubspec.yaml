@@ -1,6 +1,6 @@
 name: operation_recovery
 description: Explicit submission and lookup-only recovery of operations with uncertain backend outcomes, with scoped storage and immutable terminal states.
-version: 0.1.0
+version: 0.1.1
 publish_to: none
 repository: https://github.com/hachem-djefafla/operation_recovery
 issue_tracker: https://github.com/hachem-djefafla/operation_recovery/issues

@@ -1,14 +1,22 @@
+## 0.1.1
+
+- Correct outdated pre-release README statements and document installation from
+  pub.dev. Preserve the verified test counts, core coverage, and Windows/Linux
+  release acceptance evidence.
+- Update release preparation for the documentation-only patch. No runtime
+  behavior, public API, architecture, or reliability guarantees change.
+
 ## 0.1.0
 
-- Prepare the first public release with immutable operation identity, explicit
+- Initial public release with immutable operation identity, explicit
   submission, authoritative lookup-only reconciliation, scoped atomic storage,
   bounded recovery reservations/backoff, events, and draining shutdown.
 - Include a separate SQLite reference adapter and real process-crash examples.
   Developer-verified Windows results: 539 core, 90 storage, 58 codec, and 32 process
   tests; lost-response recovery used one submission, one effect, and one lookup.
-- Prepare repository metadata, reproducible release staging, archive inspection,
-  and Windows/Linux minimum/stable SDK quality gates. Publication remains disabled
-  until final approval; hosted CI and Linux/minimum SDK execution are release gates.
+- Include repository metadata, reproducible release staging, archive inspection,
+  and Windows/Linux minimum/stable SDK quality gates. The maintainer confirmed
+  passing release CI and publication validation before publishing 0.1.0 to pub.dev.
 
 ## 0.1.0-dev.1 (development history)
 

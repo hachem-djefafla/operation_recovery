@@ -4,47 +4,56 @@ A pure Dart package for operations whose backend outcome is uncertain.
 A lost response cannot establish whether a write succeeded. Recovery must ask
 the authoritative backend instead of automatically sending the write again.
 
-## Implementation status
+## Release and verification
 
-Version **0.1.0 is prepared for release and remains unpublished**. The package
-provides immutable domain records, atomic scoped storage, typed handlers, explicit
-submission, lookup-only reconciliation, and a separate SQLite reference adapter.
-The developer independently verified on Windows: **539 core, 90 storage, 58 codec,
-and 32 real process tests**. The lost-response crash demo used exactly one HTTP
-submission, one backend effect, and one lookup, with SQLite 3.54.0, WAL/FULL.
+[operation_recovery is published on pub.dev](https://pub.dev/packages/operation_recovery).
+The first release, **0.1.0**, provides immutable domain records, atomic scoped
+storage, typed handlers, explicit submission, lookup-only reconciliation, and a
+separate SQLite reference adapter.
+
+The initial independent Windows acceptance run passed **539 core, 90 storage,
+58 codec, and 32 real process tests**. The lost-response crash demo used exactly
+one HTTP submission, one backend effect, and one lookup, with SQLite 3.54.0, WAL/FULL.
 Memory tests alone do not establish crash recovery.
 
-The repository includes MIT licensing, API/integration guides, separate quality and
-reliability workflows, coverage and archive checks, and consumer verification.
-Linux, Dart 3.10 execution, hosted GitHub Actions and publication validation remain
-release gates. See [CONTRIBUTING.md](CONTRIBUTING.md) for verification commands and
-required CI checks. Source:
+The maintainer confirmed green
+[Quality](https://github.com/hachem-djefafla/operation_recovery/actions/workflows/quality.yml)
+and [Reliability](https://github.com/hachem-djefafla/operation_recovery/actions/workflows/reliability.yml)
+workflows for the 0.1.0 release, including Windows/Linux clean checkouts on Dart
+3.10.0 and stable, native SQLite/process tests, publication archive inspection,
+and extracted-package/consumer verification. Workflow runs retain native evidence
+and packaging artifacts. See [CONTRIBUTING.md](CONTRIBUTING.md) for reproducible
+verification commands. Source:
 [hachem-djefafla/operation_recovery](https://github.com/hachem-djefafla/operation_recovery).
 
 Core has no runtime dependencies and no Flutter, HTTP, or database imports.
 The SQLite dependency belongs only to that separate example package.
 
-## Public domain API
+## Installation
 
-For a local checkout, resolve the core and separate example dependencies before
-whole-tree analysis. See [contribution commands](CONTRIBUTING.md) for the complete
-sequence. The package is not published; use a local path dependency during review:
+Install from pub.dev:
+
+```sh
+dart pub add operation_recovery
+```
+
+Or add a compatible dependency to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  operation_recovery:
-    path: ../operation_recovery
+  operation_recovery: ^0.1.0
 ```
+
+The package requires Dart `>=3.10.0 <4.0.0`. Windows and Linux are verified CI
+platforms. SQLite stays in the separate example package and does not become a
+core dependency.
+
+## Public domain API
 
 The [API integration guide](doc/api_overview.md) covers handlers, startup recovery,
 authentication, account switching, and shutdown. Run
 `dart run example/public_api_smoke.dart` for a minimal public-import workflow, or
 `dart run example/main.dart` for a real HTTP response-loss example.
-
-After publication, replace the path dependency with `operation_recovery: ^0.1.0`.
-The declared Dart minimum is 3.10. Windows is independently verified; Linux is a
-declared CI target awaiting its first successful hosted run. SQLite stays in the
-separate example package and does not become a core dependency.
 
 Import `package:operation_recovery/operation_recovery.dart`.
 
@@ -211,16 +220,17 @@ without retrying or refreshing the version. See the storage contract for details
 - [Case study: a successful write with a lost response](doc/recovery_case_study.md)
 - [Contribution and CI instructions](CONTRIBUTING.md)
 
-From this directory:
+From a repository checkout, resolve both packages before whole-tree analysis:
 
 ```sh
 dart pub get
+dart pub -C example/sqlite_recovery get
 dart format --output=none --set-exit-if-changed .
 dart analyze --fatal-infos
 dart test
 ```
 
-Licensed under [MIT](LICENSE). Core coverage measured through the source-mode
-runner is 99.33% (442/445 executable lines). Hosted CI, Linux/minimum-SDK execution,
-and final publication validation remain open release gates.
-`publish_to: none` prevents accidental publication.
+Licensed under [MIT](LICENSE). Measured core coverage through the source-mode
+runner is **99.33% (442/445 executable lines)**. CI enforces a 90% minimum without
+excluding safety-critical implementation code to meet the target. Each new patch
+must pass the quality, reliability, and publication checks on its own revision.

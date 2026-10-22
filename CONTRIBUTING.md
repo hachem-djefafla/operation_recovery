@@ -52,13 +52,14 @@ without restoring Pub/native caches. Each combination resolves both packages,
 analyzes/tests core, probes actual FFI, builds the native worker, and runs all
 SQLite/process tests and demonstrations. Fresh resolution verifies compatible
 dependency selection at each SDK; it is not a claim of bit-identical builds.
-The example lockfile is retained as per-run evidence; commit the first real
-generated lockfile after resolution succeeds, and recheck its minimum-SDK support.
+The example lockfile is tracked for reproducible CI builds, excluded from the Pub
+archive, and retained as per-run evidence. Recheck minimum-SDK compatibility when
+updating its dependencies.
 
 The committed SQLite example lockfile is now a real stable-SDK resolution and
 currently requires Dart >=3.13 because of development tooling. Minimum-SDK CI runs
 normal `dart pub get` to select compatible versions and retains that resulting
-lockfile separately; it must actually pass on 3.10.0 before release. Do not hand
+lockfile separately; it must pass on 3.10.0 for each release candidate. Do not hand
 edit lockfiles or interpret source language constraints alone as compatibility.
 
 `python tool/prepare_release.py` audits the Git candidate list and validates a
@@ -69,12 +70,14 @@ Logs, the inspected archive, and consumer evidence are retained under ignored
 `--prepare-only` retains its temporary workspace for inspection instead.
 The command performs dry-run/archive inspection/consumer checks and never uploads.
 Use `--prepare-only` to inspect the copy before invoking external Dart commands.
-Both the normal working tree and the SQLite example remain private packages.
+The core is published on pub.dev. Its working-tree manifest retains a publication
+guard during patch preparation; validation removes that guard only in the
+disposable copy. The SQLite reference example remains a private package.
 
 Configure repository protection to require `quality-gate` and `reliability-gate`
 before merge. Both workflows run on pull requests, pushes, and merge groups. A
-failed, cancelled, or skipped prerequisite fails its aggregate gate. GitHub-hosted
-results do not exist until the repository is hosted and workflows actually run.
+failed, cancelled, or skipped prerequisite fails its aggregate gate. The maintainer
+confirmed green hosted workflows for 0.1.0; those results apply to that release.
 Scheduled runs are unnecessary for merge acceptance; release candidates must run
 both workflows again on the exact candidate revision.
 

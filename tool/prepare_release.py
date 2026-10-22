@@ -18,8 +18,8 @@ def prepare(root):
     files = audit(root)
     validate_documentation(root)
     manifest = (root / "pubspec.yaml").read_text(encoding="utf-8")
-    if not re.search(r"^version: 0\.1\.0\s*$", manifest, re.MULTILINE):
-        raise ValueError("Expected prepared release version 0.1.0")
+    if not re.search(r"^version: 0\.1\.1\s*$", manifest, re.MULTILINE):
+        raise ValueError("Expected prepared release version 0.1.1")
     manifest, count = re.subn(r"^publish_to: none\r?\n", "", manifest, flags=re.MULTILINE)
     if count != 1:
         raise ValueError("Source must retain exactly one publish_to: none guard")

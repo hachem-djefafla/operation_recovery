@@ -54,7 +54,7 @@ class ReleasePreparationTests(unittest.TestCase):
         self.addCleanup(self.directory.cleanup)
         self.root = pathlib.Path(self.directory.name)
         self.source = self.root / "pubspec.yaml"
-        self.source.write_text("name: operation_recovery\nversion: 0.1.0\npublish_to: none\n", encoding="utf-8")
+        self.source.write_text("name: operation_recovery\nversion: 0.1.1\npublish_to: none\n", encoding="utf-8")
 
     def test_only_disposable_copy_enables_publication(self):
         original = self.source.read_bytes()
@@ -63,6 +63,7 @@ class ReleasePreparationTests(unittest.TestCase):
         self.addCleanup(shutil.rmtree, stage)
         self.assertEqual(self.source.read_bytes(), original)
         self.assertNotIn("publish_to", (package / "pubspec.yaml").read_text())
+        self.assertIn("version: 0.1.1", (package / "pubspec.yaml").read_text())
         self.assertFalse(stage.is_relative_to(self.root))
 
     def test_staging_escapes_ignored_repository_ancestors(self):
@@ -139,16 +140,17 @@ class ReleasePreparationTests(unittest.TestCase):
         self.assertEqual(self.source.read_bytes(), original)
 
     def test_missing_private_guard_fails_before_copying(self):
-        self.source.write_text("version: 0.1.0\n", encoding="utf-8")
+        self.source.write_text("version: 0.1.1\n", encoding="utf-8")
         with patch.object(release, "audit", return_value=["pubspec.yaml"]), patch.object(release, "validate_documentation"):
             with self.assertRaises(ValueError):
                 release.prepare(self.root)
 
     def test_wrong_release_version_fails(self):
-        self.source.write_text("version: 0.2.0\npublish_to: none\n", encoding="utf-8")
-        with patch.object(release, "audit", return_value=["pubspec.yaml"]), patch.object(release, "validate_documentation"):
-            with self.assertRaises(ValueError):
-                release.prepare(self.root)
+        for version in ["0.1.0", "0.2.0"]:
+            self.source.write_text(f"version: {version}\npublish_to: none\n", encoding="utf-8")
+            with self.subTest(version=version), patch.object(release, "audit", return_value=["pubspec.yaml"]), patch.object(release, "validate_documentation"):
+                with self.assertRaises(ValueError):
+                    release.prepare(self.root)
 
     def test_git_audit_rejects_artifacts_and_neighbors(self):
         for name in ["neighbor/pubspec.yaml", "example/build/worker", "example/recovery.db",
