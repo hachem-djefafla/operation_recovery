@@ -102,6 +102,12 @@ final class WorkerChannel {
   Future<void> _close() async {
     try {
       await _writes;
+      // The parent closes stdin after the exit acknowledgement. Resume the
+      // paused iterator and observe that EOF before cancelling the Windows
+      // pipe subscription, completing both sides of the shutdown handshake.
+      if (await _lines.moveNext()) {
+        throw StateError('Control command received after worker shutdown');
+      }
     } finally {
       await _lines.cancel();
     }

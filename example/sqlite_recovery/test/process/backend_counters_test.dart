@@ -79,7 +79,9 @@ void main() {
         for (var index = 0; index < 4; index++)
           handler.submit(demoIdentity, 'same transient request'),
       ]);
-      await backend.checkpoint('submission-received');
+      for (var index = 0; index < 4; index++) {
+        await backend.checkpoint('submission-received');
+      }
       await Future.wait([
         backend.request('stats'),
         backend.request('release'),

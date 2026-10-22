@@ -56,6 +56,68 @@ void main() {
     expect(identical(channel.close(), closing), isTrue);
   });
 
+  test('graceful close resumes paused input and observes parent EOF', () async {
+    final consumer = _ControlledConsumer()..release.complete();
+    final sink = IOSink(consumer);
+    final shutdownRead = Completer<String>();
+    var shuttingDown = false;
+    final input = StreamController<List<int>>(
+      onResume: () {
+        if (shuttingDown && !shutdownRead.isCompleted) {
+          shutdownRead.complete('resumed');
+        }
+      },
+      onCancel: () {
+        if (shuttingDown && !shutdownRead.isCompleted) {
+          shutdownRead.complete('cancelled');
+        }
+      },
+    );
+    final channel = WorkerChannel(input: input.stream, output: sink);
+    addTearDown(() async {
+      final closing = channel.close();
+      await input.close();
+      await closing;
+      await sink.close();
+    });
+    final command = channel.next();
+    input.add(utf8.encode('{"action":"exit"}\n'));
+    expect((await command)['action'], 'exit');
+    await channel.emit({'kind': 'result'});
+    expect(input.isPaused, isTrue);
+
+    shuttingDown = true;
+    var closed = false;
+    final closing = channel.close()..then((_) => closed = true);
+
+    expect(await shutdownRead.future, 'resumed');
+    expect(closed, isFalse);
+    await input.close();
+    await closing;
+    expect(closed, isTrue);
+  });
+
+  test('graceful close rejects control commands after shutdown', () async {
+    final consumer = _ControlledConsumer()..release.complete();
+    final sink = IOSink(consumer);
+    final input = StreamController<List<int>>();
+    final channel = WorkerChannel(input: input.stream, output: sink);
+    addTearDown(() async {
+      await input.close();
+      await sink.close();
+    });
+    final command = channel.next();
+    input.add(utf8.encode('{"action":"exit"}\n'));
+    await command;
+    await channel.emit({'kind': 'result'});
+
+    final closing = expectLater(channel.close(), throwsStateError);
+    input.add(utf8.encode('{"action":"stats"}\n'));
+
+    await closing;
+    expect(input.hasListener, isFalse);
+  });
+
   test(
     'output failures propagate instead of acknowledging later messages',
     () async {
